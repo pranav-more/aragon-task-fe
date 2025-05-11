@@ -76,34 +76,6 @@ const BoardContent = () => {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* Board Header */}
-      <div className="flex justify-between items-center p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-10">
-        <h1 className="text-xl font-bold text-gray-800 dark:text-white">
-          {activeBoard.name}
-        </h1>
-        <button
-          onClick={handleAddTask}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center"
-          aria-label="Add new task"
-        >
-          <svg
-            className="w-4 h-4 mr-1"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-            ></path>
-          </svg>
-          Add New Task
-        </button>
-      </div>
-
       {/* Board Content */}
       <div className="flex-1 bg-gray-50 dark:bg-gray-900 overflow-hidden">
         <div

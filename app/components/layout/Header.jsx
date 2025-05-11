@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useBoard } from "../context/BoardContext";
-import Button from "./Button";
-import EditBoardModal from "./EditBoardModal";
-import DeleteBoardModal from "./DeleteBoardModal";
-import CreateTaskModal from "./CreateTaskModal";
+import { useBoard } from "../../context/BoardContext";
+import Button from "../Button";
+import DeleteBoardModal from "../modals/DeleteBoardModal";
+import EditBoardModal from "../modals/EditBoardModal";
+import CreateTaskModal from "../modals/CreateTaskModal";
 
 const Header = () => {
   const { activeBoard } = useBoard();

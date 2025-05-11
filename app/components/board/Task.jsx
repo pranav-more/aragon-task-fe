@@ -24,7 +24,7 @@ const Task = ({ task, onClick }) => {
       )}
       {task.subtasks && (
         <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          {task.subtasks.filter((s) => s.completed).length} of{" "}
+          {task.subtasks.filter((s) => s.isCompleted).length} of{" "}
           {task.subtasks.length} subtasks
         </p>
       )}

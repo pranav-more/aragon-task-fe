@@ -1,6 +1,5 @@
 import "./globals.css";
 import { BoardProvider } from "./context/BoardContext";
-import Sidebar from "./components/layout/Sidebar";
 
 export const metadata = {
   title: "Kanban Task Management",

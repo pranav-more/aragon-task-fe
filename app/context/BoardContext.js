@@ -1,36 +1,68 @@
 "use client";
 
-import { createContext, useContext, useReducer, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 import { initialBoards } from "../data/mockData";
 
 // Create context
 const BoardContext = createContext();
 
-// Action types
-const ADD_BOARD = "ADD_BOARD";
-const DELETE_BOARD = "DELETE_BOARD";
-const UPDATE_BOARD = "UPDATE_BOARD";
-const ADD_TASK = "ADD_TASK";
-const UPDATE_TASK = "UPDATE_TASK";
-const DELETE_TASK = "DELETE_TASK";
+// Provider component
+export const BoardProvider = ({ children }) => {
+  const [boards, setBoards] = useState(initialBoards);
+  const [activeBoardId, setActiveBoardId] = useState(
+    initialBoards[0]?.id || ""
+  );
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [theme, setTheme] = useState("dark"); // Default to dark theme
 
-// Reducer function
-const boardReducer = (state, action) => {
-  switch (action.type) {
-    case ADD_BOARD:
-      return [...state, action.payload];
+  const activeBoard =
+    boards.find((board) => board.id === activeBoardId) || boards[0];
 
-    case DELETE_BOARD:
-      return state.filter((board) => board.id !== action.payload);
+  // Initialize theme from local storage when component mounts
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.classList.toggle("dark", savedTheme === "dark");
+    } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      setTheme("dark");
+      document.documentElement.classList.add("dark");
+    }
+  }, []);
 
-    case UPDATE_BOARD:
-      return state.map((board) =>
-        board.id === action.payload.id ? action.payload : board
-      );
+  // Toggle theme function
+  const toggleTheme = () => {
+    const newTheme = theme === "light" ? "dark" : "light";
+    setTheme(newTheme);
+    localStorage.setItem("theme", newTheme);
+    document.documentElement.classList.toggle("dark", newTheme === "dark");
+  };
 
-    case ADD_TASK: {
-      const { boardId, columnId, task } = action.payload;
-      return state.map((board) => {
+  // Actions
+  const addBoard = (board) => {
+    setBoards((prevBoards) => [...prevBoards, board]);
+  };
+
+  const deleteBoard = (boardId) => {
+    setBoards((prevBoards) =>
+      prevBoards.filter((board) => board.id !== boardId)
+    );
+    // If the deleted board was active, set another board as active
+    if (boardId === activeBoardId) {
+      const newActiveBoard = boards.find((b) => b.id !== boardId);
+      setActiveBoardId(newActiveBoard?.id || "");
+    }
+  };
+
+  const updateBoard = (board) => {
+    setBoards((prevBoards) =>
+      prevBoards.map((b) => (b.id === board.id ? board : b))
+    );
+  };
+
+  const addTask = (boardId, columnId, task) => {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) => {
         if (board.id !== boardId) return board;
 
         return {
@@ -44,12 +76,13 @@ const boardReducer = (state, action) => {
             };
           }),
         };
-      });
-    }
+      })
+    );
+  };
 
-    case UPDATE_TASK: {
-      const { boardId, columnId, task } = action.payload;
-      return state.map((board) => {
+  const updateTask = (boardId, columnId, task) => {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) => {
         if (board.id !== boardId) return board;
 
         return {
@@ -63,12 +96,44 @@ const boardReducer = (state, action) => {
             };
           }),
         };
-      });
-    }
+      })
+    );
+  };
 
-    case DELETE_TASK: {
-      const { boardId, columnId, taskId } = action.payload;
-      return state.map((board) => {
+  const moveTask = (boardId, fromColumnId, toColumnId, task) => {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) => {
+        if (board.id !== boardId) return board;
+
+        // Create a new array of columns
+        return {
+          ...board,
+          columns: board.columns.map((column) => {
+            // Remove task from source column
+            if (column.id === fromColumnId) {
+              return {
+                ...column,
+                tasks: column.tasks.filter((t) => t.id !== task.id),
+              };
+            }
+
+            if (column.id === toColumnId) {
+              return {
+                ...column,
+                tasks: [...column.tasks, task],
+              };
+            }
+
+            return column;
+          }),
+        };
+      })
+    );
+  };
+
+  const deleteTask = (boardId, columnId, taskId) => {
+    setBoards((prevBoards) =>
+      prevBoards.map((board) => {
         if (board.id !== boardId) return board;
 
         return {
@@ -82,62 +147,8 @@ const boardReducer = (state, action) => {
             };
           }),
         };
-      });
-    }
-
-    default:
-      return state;
-  }
-};
-
-// Provider component
-export const BoardProvider = ({ children }) => {
-  const [boards, dispatch] = useReducer(boardReducer, initialBoards);
-  const [activeBoardId, setActiveBoardId] = useState(
-    initialBoards[0]?.id || ""
-  );
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  const activeBoard =
-    boards.find((board) => board.id === activeBoardId) || boards[0];
-
-  // Actions
-  const addBoard = (board) => {
-    dispatch({ type: ADD_BOARD, payload: board });
-  };
-
-  const deleteBoard = (boardId) => {
-    dispatch({ type: DELETE_BOARD, payload: boardId });
-    // If the deleted board was active, set another board as active
-    if (boardId === activeBoardId) {
-      const newActiveBoard = boards.find((b) => b.id !== boardId);
-      setActiveBoardId(newActiveBoard?.id || "");
-    }
-  };
-
-  const updateBoard = (board) => {
-    dispatch({ type: UPDATE_BOARD, payload: board });
-  };
-
-  const addTask = (boardId, columnId, task) => {
-    dispatch({
-      type: ADD_TASK,
-      payload: { boardId, columnId, task },
-    });
-  };
-
-  const updateTask = (boardId, columnId, task) => {
-    dispatch({
-      type: UPDATE_TASK,
-      payload: { boardId, columnId, task },
-    });
-  };
-
-  const deleteTask = (boardId, columnId, taskId) => {
-    dispatch({
-      type: DELETE_TASK,
-      payload: { boardId, columnId, taskId },
-    });
+      })
+    );
   };
 
   const toggleSidebar = () => {
@@ -151,14 +162,17 @@ export const BoardProvider = ({ children }) => {
         activeBoard,
         activeBoardId,
         isSidebarOpen,
+        theme,
         setActiveBoardId,
         addBoard,
         deleteBoard,
         updateBoard,
         addTask,
         updateTask,
+        moveTask,
         deleteTask,
         toggleSidebar,
+        toggleTheme,
       }}
     >
       {children}

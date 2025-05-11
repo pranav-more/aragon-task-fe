@@ -11,14 +11,14 @@ const TaskDetailModal = ({
   boardId,
   columns,
 }) => {
-  const { updateTask, deleteTask } = useBoard();
+  const { updateTask, deleteTask, moveTask } = useBoard();
   const [editedTask, setEditedTask] = useState({ ...task });
   const [selectedColumn, setSelectedColumn] = useState(columnId);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleSubtaskToggle = (index) => {
     const updatedSubtasks = [...editedTask.subtasks];
-    updatedSubtasks[index].completed = !updatedSubtasks[index].completed;
+    updatedSubtasks[index].isCompleted = !updatedSubtasks[index].isCompleted;
     setEditedTask({ ...editedTask, subtasks: updatedSubtasks });
 
     // Save the changes immediately
@@ -30,10 +30,13 @@ const TaskDetailModal = ({
 
   const handleStatusChange = (e) => {
     const newColumnId = e.target.value;
-    setSelectedColumn(newColumnId);
 
-    // Move the task to the new column
-    updateTask(boardId, columnId, { ...editedTask }, newColumnId);
+    if (newColumnId !== columnId) {
+      // Only move if the column has changed
+      moveTask(boardId, columnId, newColumnId, editedTask);
+      setSelectedColumn(newColumnId);
+    }
+
     onClose();
   };
 
@@ -59,7 +62,10 @@ const TaskDetailModal = ({
       className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50 p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md">
+      <div
+        className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           <div className="flex justify-between items-start mb-4">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white pr-8">
@@ -94,7 +100,7 @@ const TaskDetailModal = ({
           {task.subtasks && task.subtasks.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3">
-                Subtasks ({task.subtasks.filter((s) => s.completed).length} of{" "}
+                Subtasks ({task.subtasks.filter((s) => s.isCompleted).length} of{" "}
                 {task.subtasks.length})
               </h3>
               <div className="space-y-2">
@@ -106,14 +112,14 @@ const TaskDetailModal = ({
                     <input
                       type="checkbox"
                       id={`subtask-${subtask.id}`}
-                      checked={subtask.completed}
+                      checked={subtask.isCompleted}
                       onChange={() => handleSubtaskToggle(index)}
                       className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
                     />
                     <label
                       htmlFor={`subtask-${subtask.id}`}
                       className={`ml-2 text-sm ${
-                        subtask.completed
+                        subtask.isCompleted
                           ? "line-through text-gray-400 dark:text-gray-500"
                           : "text-gray-700 dark:text-gray-200"
                       }`}

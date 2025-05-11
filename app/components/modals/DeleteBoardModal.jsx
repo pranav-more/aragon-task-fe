@@ -1,8 +1,8 @@
 "use client";
 
-import { useBoard } from "../context/BoardContext";
-import Modal from "./Modal";
-import Button from "./Button";
+import { useBoard } from "../../context/BoardContext";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
 
 const DeleteBoardModal = ({ isOpen, onClose, boardId, boardName }) => {
   const { deleteBoard } = useBoard();

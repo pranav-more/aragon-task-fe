@@ -1,179 +1,164 @@
 "use client";
 
 import { useState } from "react";
+import { v4 as uuidv4 } from "uuid";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
+import FormInput from "../ui/FormInput";
 import { useBoard } from "../../context/BoardContext";
 
 const CreateBoardModal = ({ isOpen, onClose }) => {
   const { addBoard } = useBoard();
   const [boardName, setBoardName] = useState("");
   const [columns, setColumns] = useState([
-    { id: "column-1", name: "Todo" },
-    { id: "column-2", name: "In Progress" },
-    { id: "column-3", name: "Done" },
+    { id: uuidv4(), name: "Todo" },
+    { id: uuidv4(), name: "Doing" },
   ]);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleAddColumn = () => {
+    setColumns([...columns, { id: uuidv4(), name: "" }]);
+  };
+
+  const handleColumnChange = (id, value) => {
+    setColumns(
+      columns.map((column) =>
+        column.id === id ? { ...column, name: value } : column
+      )
+    );
+  };
+
+  const handleDeleteColumn = (id) => {
+    setColumns(columns.filter((column) => column.id !== id));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
 
     if (!boardName.trim()) {
-      setError("Board name is required");
-      return;
+      newErrors.boardName = "Board name is required";
     }
 
-    if (columns.length === 0) {
-      setError("You need at least one column");
-      return;
+    const emptyColumns = columns.filter((column) => !column.name.trim());
+    if (emptyColumns.length > 0) {
+      newErrors.columns = "All columns must have a name";
     }
 
-    if (columns.some((col) => !col.name.trim())) {
-      setError("Column names cannot be empty");
+    const duplicateNames = columns.some(
+      (column, index) =>
+        columns.findIndex((c) => c.name === column.name) !== index
+    );
+    if (duplicateNames) {
+      newErrors.columns = "Column names must be unique";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    if (e) e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
     const newBoard = {
-      id: `board-${Date.now()}`,
-      name: boardName.trim(),
-      columns: columns.map((col) => ({
-        ...col,
+      id: uuidv4(),
+      name: boardName,
+      columns: columns.map((column) => ({
+        ...column,
         tasks: [],
       })),
     };
 
     addBoard(newBoard);
-    resetForm();
     onClose();
   };
 
-  const resetForm = () => {
+  const handleReset = () => {
     setBoardName("");
     setColumns([
-      { id: "column-1", name: "Todo" },
-      { id: "column-2", name: "In Progress" },
-      { id: "column-3", name: "Done" },
+      { id: uuidv4(), name: "Todo" },
+      { id: uuidv4(), name: "Doing" },
     ]);
-    setError("");
+    setErrors({});
   };
-
-  const handleAddColumn = () => {
-    setColumns([...columns, { id: `column-${Date.now()}`, name: "" }]);
-  };
-
-  const handleRemoveColumn = (id) => {
-    setColumns(columns.filter((col) => col.id !== id));
-  };
-
-  const handleColumnNameChange = (id, value) => {
-    setColumns(
-      columns.map((col) => (col.id === id ? { ...col, name: value } : col))
-    );
-  };
-
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">
-          Create New Board
-        </h2>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Add New Board"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleSubmit}>Create Board</Button>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit}>
+        <FormInput
+          id="board-name"
+          label="Board Name"
+          value={boardName}
+          onChange={setBoardName}
+          placeholder="e.g. Web Design Project"
+          error={errors.boardName}
+          required
+        />
 
-        <form onSubmit={handleSubmit}>
-          {error && (
-            <div className="mb-4 p-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm rounded">
-              {error}
-            </div>
-          )}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Board Columns
+          </label>
 
-          <div className="mb-4">
-            <label
-              htmlFor="boardName"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-            >
-              Board Name
-            </label>
-            <input
-              type="text"
-              id="boardName"
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="e.g. Web Design Project"
-              value={boardName}
-              onChange={(e) => setBoardName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Board Columns
-            </label>
-
-            <div className="space-y-2">
-              {columns.map((column) => (
-                <div key={column.id} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="Column name"
-                    value={column.name}
-                    onChange={(e) =>
-                      handleColumnNameChange(column.id, e.target.value)
-                    }
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveColumn(column.id)}
-                    className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
-                    aria-label="Remove column"
+          {columns.map((column, index) => (
+            <div key={column.id} className="flex items-center mb-2">
+              <FormInput
+                id={`column-${index}`}
+                value={column.name}
+                onChange={(value) => handleColumnChange(column.id, value)}
+                placeholder="e.g. Todo"
+                className="flex-1"
+                error={index === 0 && errors.columns ? errors.columns : ""}
+              />
+              {columns.length > 2 && (
+                <button
+                  type="button"
+                  onClick={() => handleDeleteColumn(column.id)}
+                  className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  aria-label={`Delete column ${column.name}`}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    <svg
-                      className="w-5 h-5"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                        clipRule="evenodd"
-                      ></path>
-                    </svg>
-                  </button>
-                </div>
-              ))}
+                    <path
+                      fillRule="evenodd"
+                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
             </div>
+          ))}
 
-            <button
-              type="button"
-              onClick={handleAddColumn}
-              className="mt-3 w-full py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              + Add New Column
-            </button>
-          </div>
-
-          <div className="flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => {
-                resetForm();
-                onClose();
-              }}
-              className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-400"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              Create Board
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <button
+            type="button"
+            onClick={handleAddColumn}
+            className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 py-2 rounded-md font-medium mt-2"
+          >
+            + Add New Column
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 

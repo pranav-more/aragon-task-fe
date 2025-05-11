@@ -7,11 +7,12 @@ import CreateBoardModal from "../modals/CreateBoardModal";
 const Sidebar = () => {
   const {
     boards,
-    activeBoard,
     activeBoardId,
     setActiveBoardId,
     isSidebarOpen,
     toggleSidebar,
+    theme,
+    toggleTheme,
   } = useBoard();
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -26,26 +27,65 @@ const Sidebar = () => {
 
   if (!isSidebarOpen) {
     return (
-      <button
-        onClick={toggleSidebar}
-        className="fixed left-0 bottom-8 bg-indigo-500 text-white p-3 rounded-r-md hover:bg-indigo-600 transition-colors"
-        aria-label="Open sidebar"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      <div className="fixed left-0 bottom-8 flex flex-col gap-2">
+        <button
+          onClick={toggleTheme}
+          className="bg-indigo-500 text-white p-3 rounded-r-md hover:bg-indigo-600 transition-colors"
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 5l7 7-7 7M5 5l7 7-7 7"
-          />
-        </svg>
-      </button>
+          {theme === "light" ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+              />
+            </svg>
+          ) : (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+              />
+            </svg>
+          )}
+        </button>
+        <button
+          onClick={toggleSidebar}
+          className="bg-indigo-500 text-white p-3 rounded-r-md hover:bg-indigo-600 transition-colors"
+          aria-label="Open sidebar"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13 5l7 7-7 7M5 5l7 7-7 7"
+            />
+          </svg>
+        </button>
+      </div>
     );
   }
 
@@ -122,8 +162,63 @@ const Sidebar = () => {
         </div>
 
         <div className="mt-auto">
+          <div className="mx-4 my-4 p-3 bg-gray-200 dark:bg-gray-800 rounded-lg flex items-center justify-center">
+            <span className="mr-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-600 dark:text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"
+                />
+              </svg>
+            </span>
+            <div className="relative inline-block w-10 mr-2 align-middle select-none">
+              <input
+                type="checkbox"
+                name="toggle"
+                id="theme-toggle"
+                checked={theme === "dark"}
+                onChange={toggleTheme}
+                className="opacity-0 w-0 h-0 absolute"
+              />
+              <label
+                htmlFor="theme-toggle"
+                className="block overflow-hidden h-6 rounded-full bg-gray-300 dark:bg-gray-600 cursor-pointer"
+              >
+                <span
+                  className={`block h-6 w-6 rounded-full transform transition-transform duration-200 ease-in bg-white ${
+                    theme === "dark" ? "translate-x-4" : "translate-x-0"
+                  }`}
+                ></span>
+              </label>
+            </div>
+            <span className="ml-2">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5 text-gray-600 dark:text-gray-400"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"
+                />
+              </svg>
+            </span>
+          </div>
+
           <button
-            className="flex items-center px-4 py-2 m-4 rounded-md hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
+            className="flex items-center px-4 py-2 mx-4 mb-4 rounded-md hover:bg-gray-200 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-400"
             onClick={toggleSidebar}
             aria-label="Hide sidebar"
           >

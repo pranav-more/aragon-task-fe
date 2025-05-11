@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useBoard } from "./context/BoardContext";
-import Sidebar from "./components/Sidebar";
-import Header from "./components/Header";
-import BoardContent from "./components/BoardContent";
+import Sidebar from "./components/layout/Sidebar";
+import Header from "./components/layout/Header";
+import BoardContent from "./components/board/BoardContent";
 
 export default function Home() {
   const { isSidebarOpen } = useBoard();

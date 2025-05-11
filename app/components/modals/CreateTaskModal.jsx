@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useBoard } from "../context/BoardContext";
+import { useBoard } from "../../context/BoardContext";
 import { v4 as uuidv4 } from "uuid";
-import Modal from "./Modal";
-import Button from "./Button";
-import FormInput from "./FormInput";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
+import FormInput from "../ui/FormInput";
 
 const CreateTaskModal = ({ isOpen, onClose, columns }) => {
   const { activeBoard, addTask } = useBoard();
@@ -13,7 +13,6 @@ const CreateTaskModal = ({ isOpen, onClose, columns }) => {
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState(columns[0]?.id || "");
   const [subtasks, setSubtasks] = useState([
-    { id: uuidv4(), title: "", isCompleted: false },
     { id: uuidv4(), title: "", isCompleted: false },
   ]);
   const [errors, setErrors] = useState({});
@@ -31,7 +30,9 @@ const CreateTaskModal = ({ isOpen, onClose, columns }) => {
   };
 
   const handleDeleteSubtask = (id) => {
-    setSubtasks(subtasks.filter((subtask) => subtask.id !== id));
+    if (subtasks.length > 1) {
+      setSubtasks(subtasks.filter((subtask) => subtask.id !== id));
+    }
   };
 
   const validateForm = () => {
@@ -77,10 +78,7 @@ const CreateTaskModal = ({ isOpen, onClose, columns }) => {
     setTitle("");
     setDescription("");
     setStatus(columns[0]?.id || "");
-    setSubtasks([
-      { id: uuidv4(), title: "", isCompleted: false },
-      { id: uuidv4(), title: "", isCompleted: false },
-    ]);
+    setSubtasks([{ id: uuidv4(), title: "", isCompleted: false }]);
     setErrors({});
   };
 
@@ -144,8 +142,11 @@ const CreateTaskModal = ({ isOpen, onClose, columns }) => {
               <button
                 type="button"
                 onClick={() => handleDeleteSubtask(subtask.id)}
-                className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                className={`ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300 ${
+                  subtasks.length === 1 ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 aria-label={`Delete subtask ${index + 1}`}
+                disabled={subtasks.length === 1}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

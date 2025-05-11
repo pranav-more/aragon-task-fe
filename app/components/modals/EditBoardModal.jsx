@@ -1,23 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useBoard } from "../context/BoardContext";
+import { useState, useEffect } from "react";
+import { useBoard } from "../../context/BoardContext";
 import { v4 as uuidv4 } from "uuid";
-import Modal from "./Modal";
-import Button from "./Button";
-import FormInput from "./FormInput";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
+import FormInput from "../ui/FormInput";
 
-const CreateBoardModal = ({ isOpen, onClose }) => {
-  const { addBoard } = useBoard();
+const EditBoardModal = ({ isOpen, onClose, board }) => {
+  const { updateBoard } = useBoard();
   const [boardName, setBoardName] = useState("");
-  const [columns, setColumns] = useState([
-    { id: uuidv4(), name: "Todo" },
-    { id: uuidv4(), name: "Doing" },
-  ]);
+  const [columns, setColumns] = useState([]);
   const [errors, setErrors] = useState({});
 
+  useEffect(() => {
+    if (board) {
+      setBoardName(board.name);
+      setColumns(board.columns.map((column) => ({ ...column })));
+    }
+  }, [board, isOpen]);
+
   const handleAddColumn = () => {
-    setColumns([...columns, { id: uuidv4(), name: "" }]);
+    setColumns([...columns, { id: uuidv4(), name: "", tasks: [] }]);
   };
 
   const handleColumnChange = (id, value) => {
@@ -63,39 +67,27 @@ const CreateBoardModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    const newBoard = {
-      id: uuidv4(),
+    const updatedBoard = {
+      ...board,
       name: boardName,
-      columns: columns.map((column) => ({
-        ...column,
-        tasks: [],
-      })),
+      columns: columns,
     };
 
-    addBoard(newBoard);
+    updateBoard(updatedBoard);
     onClose();
-  };
-
-  const handleReset = () => {
-    setBoardName("");
-    setColumns([
-      { id: uuidv4(), name: "Todo" },
-      { id: uuidv4(), name: "Doing" },
-    ]);
-    setErrors({});
   };
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Board"
+      title="Edit Board"
       footer={
         <>
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Create Board</Button>
+          <Button onClick={handleSubmit}>Save Changes</Button>
         </>
       }
     >
@@ -125,27 +117,35 @@ const CreateBoardModal = ({ isOpen, onClose }) => {
                 className="flex-1"
                 error={index === 0 && errors.columns ? errors.columns : ""}
               />
-              {columns.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() => handleDeleteColumn(column.id)}
-                  className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                  aria-label={`Delete column ${column.name}`}
+              <button
+                type="button"
+                onClick={() => handleDeleteColumn(column.id)}
+                className="ml-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                aria-label={`Delete column ${column.name}`}
+                disabled={column.tasks.length > 0}
+                title={
+                  column.tasks.length > 0
+                    ? "Cannot delete column with tasks"
+                    : "Delete column"
+                }
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`h-5 w-5 ${
+                    column.tasks.length > 0
+                      ? "text-gray-400 dark:text-gray-600"
+                      : ""
+                  }`}
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </button>
-              )}
+                  <path
+                    fillRule="evenodd"
+                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
             </div>
           ))}
 
@@ -162,4 +162,4 @@ const CreateBoardModal = ({ isOpen, onClose }) => {
   );
 };
 
-export default CreateBoardModal;
+export default EditBoardModal;
